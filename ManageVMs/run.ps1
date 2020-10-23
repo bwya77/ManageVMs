@@ -61,7 +61,7 @@ function Get-VMStatus
 				
 				Write-Host "Sending message: $MessageBack"
 				Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
-				$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+				$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 				Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 			}
 			Else
@@ -69,7 +69,7 @@ function Get-VMStatus
 				Write-Host "Could not obtain a status for the server: $_"
 				$MessageBack = "Could not obtain a status for the server: $_"
 				Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
-				$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+				$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 				Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 			}
 		}
@@ -100,7 +100,7 @@ function PowerOn-VM
 				$MessageBack = "Successfully turned on the server, '$($VM.Name)'"
 				Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 				
-				$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+				$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 				Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 			}
 			Else
@@ -111,7 +111,7 @@ function PowerOn-VM
 Error Status: $($StartVM.Status)"
 				Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 				
-				$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+				$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 				Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 			}
 		}
@@ -132,7 +132,7 @@ function PowerOff-VM
 		If ($Message -eq "Yes")
 		{
 			#Get last message that was received 
-			$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+			$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 			$LastMessage = (Get-AzTableRow -table $AzureTable -partitionKey sms | Where-Object { $_.Sender -like $Sender } | Sort-Object Tabletimestamp -Descending | Select-Object -First 1)
 			$VMs = ($LastMessage.VMstoPowerDown).split(", ")
 			$VMs | ForEach-Object {
@@ -147,7 +147,7 @@ function PowerOff-VM
 					$MessageBack = "Successfully turned off the server, '$($VM.Name)'"
 					Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 					
-					$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+					$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 					Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 				}
 				Else
@@ -158,7 +158,7 @@ function PowerOff-VM
 Error Status: $($StopVM.Status)"
 					Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 					
-					$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+					$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 					Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 				}
 			}
@@ -173,7 +173,7 @@ Error Status: $($StopVM.Status)"
 				$Names += $VM.Name
 			}
 			#Get last message that was received 
-			$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+			$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 			$LastMessage = (Get-AzTableRow -table $AzureTable -partitionKey sms | Where-Object { $_.Sender -like $Sender } | Sort-Object Tabletimestamp -Descending | Select-Object -First 1).message
 			If ($LastMessage -notlike "*are you sure you want to proceed?*")
 			{
@@ -182,7 +182,7 @@ Error Status: $($StopVM.Status)"
 				$MessageBack = "This will turn off the following VM's: '$strPowerDownList', are you sure you want to proceed? Text Yes/No"
 				Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 				
-				$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+				$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 				Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack"; "VMstoPowerDown" = "$strPowerDownList" }
 			}
 		}
@@ -225,7 +225,7 @@ If (($Sender -like "*6182036528"))
 	{
 		write-host "The message is about a VM, it must be a response"
 		#Get last message that was received 
-		$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+		$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 		$LastMessage = (Get-AzTableRow -table $AzureTable -partitionKey sms | Where-Object { $_.Sender -like $Sender } | Sort-Object Tabletimestamp -Descending | Select-Object -First 1).message
 		Write-Host "The last message from this sender was $LastMessage"
 		If ($LastMessage -like "*Status*")
@@ -247,7 +247,7 @@ If (($Sender -like "*6182036528"))
 			Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 			
 			$timestamp = get-date -Format MMddyyy_HHmmss
-			$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+			$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 			Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message" }
 		}
 	}
@@ -276,7 +276,7 @@ $Vms "
 			Write-Host "Sending Message: $MessageBack"
 			Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 			$timestamp = get-date -Format MMddyyy_HHmmss
-			$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+			$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 			Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 		}
 	}
@@ -305,7 +305,7 @@ $Vms "
 			Write-Host "Sending Message: $MessageBack"
 			Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 			$timestamp = get-date -Format MMddyyy_HHmmss
-			$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+			$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 			Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 		}
 	}
@@ -334,7 +334,7 @@ $Vms "
 			Write-Host "Sending Message: $MessageBack"
 			Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 			$timestamp = get-date -Format MMddyyy_HHmmss
-			$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+			$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 			Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 		}
 	}
@@ -343,7 +343,7 @@ $Vms "
 		$MessageBack = "Power off server cancelled"
 		Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 		$timestamp = get-date -Format MMddyyy_HHmmss
-		$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+		$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 		Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 	}
 	Elseif ($Message -eq "Yes")
@@ -358,7 +358,7 @@ $Vms "
 		
 		
 		$timestamp = get-date -Format MMddyyy_HHmmss
-		$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+		$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 		Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 	}
 	Disconnect-AzAccount
@@ -369,7 +369,7 @@ Else
 	Send-Message -AccountSid $accountsid -authToken $authtoken -fromNumber $FromNumber -toNumber $tonumber -message $MessageBack
 	
 	$timestamp = get-date -Format MMddyyy_HHmmss
-	$AzureTable = Get-AzTableTable -TableName 'tablesmslog' -ResourceGroup 'rg-azfunctions' -StorageAccountName 'salaazfunctions'
+	$AzureTable = Get-AzTableTable -TableName $ENV:StorageTableName -ResourceGroup $ENV:resourceGroup -StorageAccountName $ENV:StorageAccountName
 	Add-AzTableRow -table $AzureTable -partitionKey sms -rowKey ("$timestamp") -property @{ "sender" = "$Sender"; "message" = "$message"; "response" = "$MessageBack" }
 }
 
