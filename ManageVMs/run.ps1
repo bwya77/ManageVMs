@@ -232,11 +232,11 @@ If (($Sender -like "*6182036528"))
 		{
 			Get-VMStatus -Server $Message
 		}
-		Elseif (($LastMessage -like "*Turn On*") -or ($LastMessage -like "*Power On*"))
+		Elseif (($LastMessage -like "*Turn On*") -or ($LastMessage -like "*Power On*") -or ($LastMessage -like "*Power Up*"))
 		{
 			PowerOn-VM -Server $Message
 		}
-		Elseif (($LastMessage -like "*Turn Off*") -or ($LastMessage -like "*Power Off*"))
+		Elseif (($LastMessage -like "*Turn Off*") -or ($LastMessage -like "*Power Off*") -or ($LastMessage -like "*Power Down*"))
 		{
 			PowerOff-VM -Server $Message
 		}
